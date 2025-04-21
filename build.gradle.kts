@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "me.window"
-version = "1.4.1"
+version = "1.4.2"
 
 repositories {
     mavenCentral()
@@ -23,11 +23,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-    compileOnly("net.projecttl:InventoryGUI-api:4.6.1")
+    compileOnly("io.papermc.paper:paper-api:1.21.5-R0.1-SNAPSHOT")
+    compileOnly("net.projecttl:InventoryGUI-api:4.6.3")
     compileOnly("net.luckperms:api:5.4")
     implementation("org.bstats:bstats-bukkit:3.1.0")
-    implementation("net.wesjd:anvilgui:1.10.4-SNAPSHOT")
+    implementation("net.wesjd:anvilgui:1.10.5-SNAPSHOT")
 }
 
 var targetJavaVersion = 21
