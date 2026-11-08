@@ -1,7 +1,7 @@
 name: SuffixChanger
 version: '${version}'
 main: cc.jaysi.suffixchanger.SuffixChanger
-api-version: '1.21'
+api-version: '23.3'
 depend: [LuckPerms]
 authors: [JSDfJ]
 commands:
