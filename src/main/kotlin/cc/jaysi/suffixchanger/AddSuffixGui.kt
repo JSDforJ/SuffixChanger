@@ -1,9 +1,9 @@
-package me.window.suffixchanger
+package cc.jaysi.suffixchanger
 
-import me.window.suffixchanger.SuffixChanger.Companion.api
-import me.window.suffixchanger.SuffixChanger.Companion.stripSuffix
-import me.window.suffixchanger.SuffixChanger.Companion.toSuffixComponent
-import me.window.suffixchanger.SuffixChanger.Companion.unitalic
+import cc.jaysi.suffixchanger.SuffixChanger.Companion.api
+import cc.jaysi.suffixchanger.SuffixChanger.Companion.stripSuffix
+import cc.jaysi.suffixchanger.SuffixChanger.Companion.toSuffixComponent
+import cc.jaysi.suffixchanger.SuffixChanger.Companion.unitalic
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -11,15 +11,15 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.luckperms.api.node.types.DisplayNameNode
 import net.luckperms.api.node.types.SuffixNode
 import net.luckperms.api.node.types.WeightNode
-import net.projecttl.inventory.gui
-import net.projecttl.inventory.util.InventoryType
-import net.wesjd.anvilgui.AnvilGUI
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
-import java.util.function.BiFunction
+import xyz.xenondevs.invui.gui.Gui
+import xyz.xenondevs.invui.item.Item
+import xyz.xenondevs.invui.item.ItemBuilder
+import xyz.xenondevs.invui.window.AnvilWindow
+import xyz.xenondevs.invui.window.SmithingWindow
 
 object AddSuffixGui {
     lateinit var plugin: SuffixChanger
@@ -42,7 +42,7 @@ object AddSuffixGui {
         } else {
             meta.displayName(Component.text(data[player]?.rankName!!).decoration(TextDecoration.ITALIC, false))
         }
-        stack.setItemMeta(meta)
+        stack.itemMeta = meta
         return stack
     }
 
@@ -62,7 +62,7 @@ object AddSuffixGui {
                 )
             )
         }
-        stack.setItemMeta(meta)
+        stack.itemMeta = meta
         return stack
     }
 
@@ -71,7 +71,7 @@ object AddSuffixGui {
         val meta = stack.itemMeta
         meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES)
         meta.displayName(Component.text(data[player]?.weight ?: 3).decoration(TextDecoration.ITALIC, false))
-        stack.setItemMeta(meta)
+        stack.itemMeta = meta
         return stack
     }
 
@@ -94,7 +94,7 @@ object AddSuffixGui {
 
             stack.itemMeta = meta
             return stack
-        } else if (SuffixChanger.api.trackManager.getTrack(
+        } else if (api.trackManager.getTrack(
                 SuffixChanger.oConfig.getString("track") ?: "suffixes"
             )?.groups!!.any { it == data[player]?.rankName }
         ) {
@@ -120,13 +120,13 @@ object AddSuffixGui {
             meta.setEnchantmentGlintOverride(true)
             val lore = ArrayList<Component>()
             lore.add(
-                Component.text("Rank Name: ", NamedTextColor.AQUA).unitalic()
+                Component.text("Rank name: ", NamedTextColor.AQUA).unitalic()
                     .append(Component.text(data[player]?.rankName!!, NamedTextColor.WHITE))
             )
             lore.add(
-                Component.text("Suffix: ", NamedTextColor.AQUA).unitalic().append(
+                Component.text("Suffix:", NamedTextColor.AQUA).unitalic().append(
                     Component.text(
-                        "",
+                        " ",
                         NamedTextColor.WHITE
                     )
                 ).append(LegacyComponentSerializer.legacyAmpersand().deserialize(data[player]?.suffix!!.stripSuffix()))
@@ -144,20 +144,26 @@ object AddSuffixGui {
 
     fun inventory(player: Player, isDoing: Boolean = false) {
         if (!isDoing) data[player] = NewRankData()
-        player.gui(Component.text("Add Suffix"), InventoryType.CHEST_9) {
-            slot(1, getNameItemStack(player)) {
-                selectName(player)
-            }
-            slot(3, getSuffixItemStack(player)) {
-                selectSuffix(player)
-            }
-            slot(5, getWeightItemStack(player)) {
-                selectWeight(player)
-            }
 
-            slot(7, getConfirmItemStack(player)) {
+        val guiBuilder = Gui.builder()
+            .setStructure("X Y Z C")
+            .addIngredient('X', Item.builder().setItemProvider(getNameItemStack(player)).addClickHandler {
+                selectName(player)
+            })
+            .addIngredient('Y', Item.builder().setItemProvider(getSuffixItemStack(player)).addClickHandler {
+                selectSuffix(player)
+            })
+            .addIngredient('Z', Item.builder().setItemProvider(getWeightItemStack(player)).addClickHandler {
+                selectWeight(player)
+            })
+            .addIngredient('C', Item.builder().setItemProvider(getConfirmItemStack(player)).addClickHandler {
                 if (!player.hasPermission("suffixchanger.admin")) {
-                    player.sendMessage(Bukkit.permissionMessage())
+                    player.sendMessage(
+                        Component.text(
+                            "You do not have permission to use this command.",
+                            NamedTextColor.DARK_RED
+                        )
+                    )
                 } else {
                     val dat = data[player]!!
                     api.groupManager.createAndLoadGroup(dat.rankName!!.lowercase()).thenRun {
@@ -173,90 +179,79 @@ object AddSuffixGui {
                                 SuffixChanger.oConfig.getString("track") ?: "suffixes"
                             )!!
                         )
-                        player.sendMessage(Component.text("Successfully created group ${dat.rankName!!.lowercase()} with suffix ", NamedTextColor.WHITE).append(dat.suffix!!.toSuffixComponent()).append(
-                            Component.text(" and weight ${dat.weight}", NamedTextColor.WHITE)))
+                        player.sendMessage(
+                            Component.text(
+                                "Successfully created group ${dat.rankName!!.lowercase()} with suffix ",
+                                NamedTextColor.WHITE
+                            ).append(dat.suffix!!.toSuffixComponent()).append(
+                                Component.text(" and weight ${dat.weight}", NamedTextColor.WHITE)
+                            )
+                        )
                         data.remove(player)
-                        player.closeInventory()
+                        plugin.server.scheduler.runTask(plugin, Runnable {
+                            if (player.isOnline) player.closeInventory()
+                        })
                     }
                 }
-            }
-        }
+            })
+
+        SmithingWindow.builder()
+            .setTitle(Component.text("Add Suffix"))
+            .setUpperGui(guiBuilder)
+            .open(player)
     }
 
     private fun selectName(player: Player) {
-        val builder = AnvilGUI.Builder()
-        builder.title("Change Rank Name")
-        builder.itemLeft(getNameItemStack(player))
-        builder.plugin(plugin)
+        val nameItem = ItemStack(Material.PAPER)
         if (data[player]?.rankName != null) {
-            builder.text(data[player]?.rankName)
+            val meta = nameItem.itemMeta
+            meta.displayName(data[player]?.rankName?.let { Component.text(it, NamedTextColor.WHITE) })
+            nameItem.itemMeta = meta
         }
-        builder.onClick(BiFunction { slot, stateSnapshot ->
-            if (slot != AnvilGUI.Slot.OUTPUT) {
-                return@BiFunction emptyList()
-            }
-
-            if (stateSnapshot.text.isBlank()) {
-                return@BiFunction emptyList()
-            }
-
-            return@BiFunction listOf(AnvilGUI.ResponseAction.run {
-                data[player]?.rankName = stateSnapshot.text
-                inventory(player, true)
-            })
-        })
-        builder.open(player)
+        val guiBuilder = Gui.builder()
+            .setStructure("Z # X")
+            .addIngredient('Z', nameItem)
+            .addIngredient(
+                'X',
+                Item.builder().setItemProvider(ItemBuilder(Material.ARROW).setCustomName("Return")).addClickHandler {
+                    inventory(player, true)
+                })
+        AnvilWindow.builder()
+            .addRenameHandler { text -> data[player]?.rankName = text }
+            .setTitle("Change Rank Name")
+            .setUpperGui(guiBuilder)
+            .open(player)
     }
 
     private fun selectSuffix(player: Player) {
-        val builder = AnvilGUI.Builder()
-        builder.title("Change Suffix")
-        builder.itemLeft(getSuffixItemStack(player))
-        builder.plugin(plugin)
-        if (data[player]?.suffix != null) {
-            builder.text(data[player]?.suffix)
-        }
-        builder.onClick(BiFunction { slot, stateSnapshot ->
-            if (slot != AnvilGUI.Slot.OUTPUT) {
-                return@BiFunction emptyList()
-            }
-
-            if (stateSnapshot.text.isBlank()) {
-                return@BiFunction emptyList()
-            }
-
-            return@BiFunction listOf(AnvilGUI.ResponseAction.run {
-                data[player]?.suffix = stateSnapshot.text
-                inventory(player, true)
-            })
-        })
-        builder.open(player)
+        val guiBuilder = Gui.builder()
+            .setStructure("Z # X")
+            .addIngredient('Z', getSuffixItemStack(player))
+            .addIngredient(
+                'X',
+                Item.builder().setItemProvider(ItemBuilder(Material.ARROW).setCustomName("Return")).addClickHandler {
+                    inventory(player, true)
+                })
+        AnvilWindow.builder()
+            .addRenameHandler { text -> data[player]?.suffix = text }
+            .setTitle("Change Suffix")
+            .setUpperGui(guiBuilder)
+            .open(player)
     }
 
     private fun selectWeight(player: Player) {
-        val builder = AnvilGUI.Builder()
-        builder.title("Change Rank Weight")
-        builder.itemLeft(getWeightItemStack(player))
-        builder.plugin(plugin)
-        builder.text(data[player]?.weight.toString())
-        builder.onClick(BiFunction { slot, stateSnapshot ->
-            if (slot != AnvilGUI.Slot.OUTPUT) {
-                return@BiFunction emptyList()
-            }
-
-            if (stateSnapshot.text.isBlank()) {
-                return@BiFunction emptyList()
-            }
-
-            if (stateSnapshot.text.toInt() < 0) {
-                return@BiFunction emptyList()
-            }
-
-            return@BiFunction listOf(AnvilGUI.ResponseAction.run {
-                data[player]?.weight = stateSnapshot.text.toInt()
-                inventory(player, true)
-            })
-        })
-        builder.open(player)
+        val guiBuilder = Gui.builder()
+            .setStructure("Z # X")
+            .addIngredient('Z', getWeightItemStack(player))
+            .addIngredient(
+                'X',
+                Item.builder().setItemProvider(ItemBuilder(Material.ARROW).setCustomName("Return")).addClickHandler {
+                    inventory(player, true)
+                })
+        AnvilWindow.builder()
+            .addRenameHandler { text -> data[player]?.weight = text.toInt() }
+            .setTitle("Change Rank Weight")
+            .setUpperGui(guiBuilder)
+            .open(player)
     }
 }

@@ -1,4 +1,4 @@
-package me.window.suffixchanger
+package cc.jaysi.suffixchanger
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
@@ -58,7 +58,7 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
 
         fun String.stripSuffix(): String {
             val match = Regex("&(.) +").find(this) ?: return this
-            if(match.groupValues[1].isEmpty()) return this
+            if (match.groupValues[1].isEmpty()) return this
             return this.replaceFirst(Regex("&(.) +"), "&${match.groupValues[1]}")
         }
 
@@ -67,7 +67,8 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
         }
 
         fun String.toSuffixComponent(): Component {
-            return Component.empty().unitalic().color(NamedTextColor.WHITE).append(LegacyComponentSerializer.legacyAmpersand().deserialize(this.stripSuffix()))
+            return Component.empty().unitalic().color(NamedTextColor.WHITE)
+                .append(LegacyComponentSerializer.legacyAmpersand().deserialize(this.stripSuffix()))
         }
     }
 
@@ -76,16 +77,31 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
             val provider = Bukkit.getServicesManager().getRegistration(LuckPerms::class.java)
             if (provider != null) {
                 oConfig = config
-                config.addDefault("title", "<gradient:dark_red:red>Suffix</gradient><gradient:dark_blue:blue>Changer</gradient>")
-                config.setInlineComments("title", listOf("changes the title that is used for the GUI, supports MiniMessage"))
+                config.addDefault(
+                    "title",
+                    "<gradient:dark_red:red>Suffix</gradient><gradient:dark_blue:blue>Changer</gradient>"
+                )
+                config.setInlineComments(
+                    "title",
+                    listOf("changes the title that is used for the GUI, supports MiniMessage")
+                )
                 config.addDefault("watermark", true)
-                config.setInlineComments("watermark", listOf("set to false to disable the watermark under the leftover buttons"))
+                config.setInlineComments(
+                    "watermark",
+                    listOf("set to false to disable the watermark under the leftover buttons")
+                )
                 config.addDefault("obfuscate", true)
-                config.setInlineComments("obfuscate", listOf("set to true to obfuscate suffixes that the players isn't allowed to use"))
+                config.setInlineComments(
+                    "obfuscate",
+                    listOf("set to true to obfuscate suffixes that the players isn't allowed to use")
+                )
                 config.addDefault("track", "suffixes")
                 config.setInlineComments("track", listOf("advanced, determines which track to use for suffixes"))
                 config.addDefault("group_weight", 3)
-                config.setInlineComments("group_weight", listOf("advanced, determines what weight the group should have in Luckperms when using /addsuffix"))
+                config.setInlineComments(
+                    "group_weight",
+                    listOf("advanced, determines what weight the group should have in Luckperms when using /addsuffix")
+                )
                 config.options().copyDefaults(true)
                 saveConfig()
                 api = provider.provider
@@ -96,30 +112,41 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
                 AddSuffixGui.plugin = this
 
                 val metrics = Metrics(this, BSTATS_ID)
-                metrics.addCustomChart(SimplePie(
-                    "watermark"
-                ) { if (config.getBoolean("watermark")) "true" else "false" })
-                metrics.addCustomChart(SimplePie(
-                    "obfuscate"
-                ) { if (config.getBoolean("obfuscate")) "true" else "false" })
-                metrics.addCustomChart(SimplePie(
-                    "title"
-                ) { if(config.getString("title") == "<gradient:dark_red:red>Suffix</gradient><gradient:dark_blue:blue>Changer</gradient>") "default" else "custom" })
-                metrics.addCustomChart(SimplePie(
-                    "luckperms"
-                ) { provider.plugin.pluginMeta.version })
-                metrics.addCustomChart(SimplePie(
-                    "vault"
-                ) { Bukkit.getPluginManager().isPluginEnabled("Vault").toString() })
-                metrics.addCustomChart(SimplePie(
-                    "suffix_count"
-                ) { (api.trackManager.getTrack(config.getString("track")?: "suffixes")?.groups?.size?: 0).toString() })
-                metrics.addCustomChart(SimplePie(
-                    "track"
-                ) { if(config.getString("track") == "suffixes") "default" else "custom" })
-                metrics.addCustomChart(SimplePie(
-                    "default_weight"
-                ) { config.getInt("group_weight").toString() })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "watermark"
+                    ) { if (config.getBoolean("watermark")) "true" else "false" })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "obfuscate"
+                    ) { if (config.getBoolean("obfuscate")) "true" else "false" })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "title"
+                    ) { if (config.getString("title") == "<gradient:dark_red:red>Suffix</gradient><gradient:dark_blue:blue>Changer</gradient>") "default" else "custom" })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "luckperms"
+                    ) { provider.plugin.pluginMeta.version })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "vault"
+                    ) { Bukkit.getPluginManager().isPluginEnabled("Vault").toString() })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "suffix_count"
+                    ) {
+                        (api.trackManager.getTrack(config.getString("track") ?: "suffixes")?.groups?.size
+                            ?: 0).toString()
+                    })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "track"
+                    ) { if (config.getString("track") == "suffixes") "default" else "custom" })
+                metrics.addCustomChart(
+                    SimplePie(
+                        "default_weight"
+                    ) { config.getInt("group_weight").toString() })
             } else {
                 logger.warning("Could not find LuckPerms! This plugin is required.")
                 Bukkit.getPluginManager().disablePlugin(this)
@@ -135,9 +162,9 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-        if(sender is Player) {
-            if(command.name.lowercase() == "suffix") {
-                if(!sender.hasPermission("suffixchanger.suffix")) {
+        if (sender is Player) {
+            if (command.name.lowercase() == "suffix") {
+                if (!sender.hasPermission("suffixchanger.suffix")) {
                     sender.sendMessage(Bukkit.permissionMessage())
                     return true
                 }
@@ -161,11 +188,11 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
         }
 
         if (command.name.lowercase() == "addsuffix") {
-            if(!sender.hasPermission("suffixchanger.admin") && sender !is ConsoleCommandSender) {
+            if (!sender.hasPermission("suffixchanger.admin") && sender !is ConsoleCommandSender) {
                 sender.sendMessage(Bukkit.permissionMessage())
                 return true
             }
-            if(args.size < 2) {
+            if (args.size < 2) {
                 return false
             }
 
@@ -183,8 +210,9 @@ class SuffixChanger : JavaPlugin(), CommandExecutor {
                     it.data().add(WeightNode.builder(config.getInt("weight")).build())
                     it.data().add(SuffixNode.builder(suffix, 3).build())
                 }
-                api.trackManager.getTrack(config.getString("track")?: "suffixes")!!.appendGroup(api.groupManager.getGroup(args[0].lowercase())!!)
-                api.trackManager.saveTrack(api.trackManager.getTrack(config.getString("track")?: "suffixes")!!)
+                api.trackManager.getTrack(config.getString("track") ?: "suffixes")!!
+                    .appendGroup(api.groupManager.getGroup(args[0].lowercase())!!)
+                api.trackManager.saveTrack(api.trackManager.getTrack(config.getString("track") ?: "suffixes")!!)
                 sender.sendMessage(Component.text("Successfully created group ${args[0].lowercase()} with suffix ${suffix.stripSuffix()}"))
             }
         }

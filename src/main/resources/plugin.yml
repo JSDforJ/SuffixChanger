@@ -1,11 +1,9 @@
 name: SuffixChanger
 version: '${version}'
-main: me.window.suffixchanger.SuffixChanger
+main: cc.jaysi.suffixchanger.SuffixChanger
 api-version: '1.21'
 depend: [LuckPerms]
-authors: [Window5]
-libraries:
-  - net.projecttl:InventoryGUI-api:4.6.3
+authors: [JSDfJ]
 commands:
   suffix:
     description: Open the SuffixChanger GUI

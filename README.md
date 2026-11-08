@@ -21,9 +21,9 @@ Let players choose their suffix with a simple-to-use GUI. Also contains admin gu
 
 ## Dependencies
 
-This plugin obviously requires [LuckPerms](https://luckperms.net/download) to function.
+This plugin requires [LuckPerms](https://luckperms.net/download) to function.
 
-For suffixes to show in chat you need another plugin to format the chat, for a simplistic formatter you can use [Vault](https://www.spigotmc.org/resources/vault.34315) and [VaultChatFormatter](https://www.spigotmc.org/resources/vaultchatformatter.49016)
+For suffixes to show in chat you need another plugin to format the chat.
 
 # Usage
 
