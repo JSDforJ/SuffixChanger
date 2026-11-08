@@ -58,4 +58,4 @@ Small note: If editing the Readme, please conform to the [standard-readme](https
 
 # License
 
-[GNU GPL](LICENSE) © Window5
+[GNU GPL](LICENSE) © jaysi.cc
